@@ -2,6 +2,7 @@
 	import { decode } from 'html-entities';
 	import { createEventDispatcher } from 'svelte';
 	import DomainAvailableModal from '../chat/DomainAvailableModal.svelte';
+	import DomainUnavailableModal from '../chat/DomainUnavailableModal.svelte';
 	import Spinner from '../common/Spinner.svelte';
 	import Check from '../icons/Check.svelte';
 	import XMark from '../icons/XMark.svelte';
@@ -30,6 +31,10 @@
 	function extractDomain(str: string): string {
 		const { domain: rawDomain } = parseJSONString(decode(attributes?.arguments));
 		return rawDomain.replaceAll('*', '');
+	}
+	function extractWhoisData(str: string): string {
+		const { details } = parseJSONString(decode(str));
+		return details;
 	}
 
 	function extractAvailability(str: string): boolean {
@@ -61,12 +66,14 @@
 				{@const domain = extractDomain(attributes?.arguments)}
 				{@const available = extractAvailability(attributes?.result)}
 
-				<DomainAvailableModal bind:show={showModal} {domain} />
-
 				{#if available}
+					<DomainAvailableModal bind:show={showModal} {domain} />
 					<Check className="size-5 text-green-500" />
 					<span>{domain} is available</span>
 				{:else}
+					{@const whoisData = extractWhoisData(attributes?.result)}
+
+					<DomainUnavailableModal bind:show={showModal} {domain} {whoisData} />
 					<XMark className="size-5 text-red-500" />
 					<span>{domain} is not available</span>
 				{/if}
