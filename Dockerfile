@@ -35,6 +35,22 @@ COPY . .
 ENV APP_BUILD_HASH=${BUILD_HASH}
 RUN npm run build
 
+
+######## Proxy server ########
+FROM node:22-alpine3.20 AS build
+ARG BUILD_HASH
+
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+WORKDIR /proxy
+
+COPY proxy/package.json proxy/package-lock.json ./
+RUN npm ci
+
+COPY proxy/ .
+ENV APP_BUILD_HASH=${BUILD_HASH}
+RUN npm run build
+
 ######## WebUI backend ########
 FROM python:3.11-slim-bookworm AS base
 
@@ -165,7 +181,7 @@ COPY --chown=$UID:$GID --from=build /app/package.json /app/package.json
 # copy backend files
 COPY --chown=$UID:$GID ./backend .
 
-EXPOSE 8080
+EXPOSE 8081
 
 HEALTHCHECK CMD curl --silent --fail http://localhost:${PORT:-8080}/health | jq -ne 'input.status == true' || exit 1
 
@@ -175,4 +191,5 @@ ARG BUILD_HASH
 ENV WEBUI_BUILD_VERSION=${BUILD_HASH}
 ENV DOCKER=true
 
+CMD [ "node", "proxy/index.js", "&" ]
 CMD [ "bash", "start.sh"]
