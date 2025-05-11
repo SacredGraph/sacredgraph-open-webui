@@ -83,6 +83,8 @@ ENV TIKTOKEN_ENCODING_NAME="cl100k_base" \
 ## Hugging Face download cache ##
 ENV HF_HOME="/app/backend/data/cache/embedding/models"
 
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 ## Torch Extensions ##
 # ENV TORCH_EXTENSIONS_DIR="/.cache/torch_extensions"
 
