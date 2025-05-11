@@ -37,7 +37,7 @@ RUN npm run build
 
 
 ######## Proxy server ########
-FROM node:22-alpine3.20 AS build
+FROM node:22-alpine3.20 AS proxy
 ARG BUILD_HASH
 
 ENV NODE_OPTIONS="--max-old-space-size=4096"
