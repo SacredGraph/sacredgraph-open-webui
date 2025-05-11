@@ -44,9 +44,9 @@
 	];
 </script>
 
-<Modal bind:show size="md">
+<Modal bind:show size="sm">
 	<div>
-		<div class=" flex justify-between dark:text-gray-300 px-5 pt-4 pb-0.5">
+		<div class=" flex justify-between dark:text-gray-300 px-5 pt-4 pb-2">
 			<div class=" text-lg font-medium self-center">{$i18n.t('Domain is available')}</div>
 			<button
 				class="self-center"
@@ -68,11 +68,14 @@
 		</div>
 
 		<div class="flex flex-col w-full px-5 pb-5 dark:text-gray-200">
+			<div class="text-sm text-gray-500">
+				{$i18n.t('The domain')}
+				<span class="text-black dark:text-white">{domain}</span>
+				{$i18n.t('is available for registration.')}
+			</div>
+
 			<div class="text-sm text-gray-500 mb-4">
-				{$i18n.t('The domain')} <span class="font-semibold text-white">{domain}</span>
-				{$i18n.t(
-					'is available for registration. Click on a registrar to continue with the purchase:'
-				)}
+				{$i18n.t('Click on a registrar to continue with the purchase:')}
 			</div>
 
 			<div class="flex flex-col gap-3">

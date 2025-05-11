@@ -12,9 +12,9 @@
 
 	export let title: string;
 	export let attributes: { arguments: string; result: string; done: string };
-	export let className = '';
+	export let className = 'my-2';
 	export let buttonClassName =
-		'w-fit text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition';
+		'w-fit text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 transition border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 rounded-lg px-2 py-0.5';
 
 	export let id = '';
 

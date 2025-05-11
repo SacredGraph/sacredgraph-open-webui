@@ -4,60 +4,52 @@
 
 	import { goto } from '$app/navigation';
 	import {
-		user,
-		chats,
-		settings,
-		showSettings,
+		channels,
 		chatId,
-		tags,
-		showSidebar,
+		chats,
+		config,
+		currentChatPage,
+		isApp,
 		mobile,
-		showArchivedChats,
 		pinnedChats,
 		scrollPaginationEnabled,
-		currentChatPage,
-		temporaryChatEnabled,
-		channels,
+		showArchivedChats,
+		showSidebar,
 		socket,
-		config,
-		isApp
+		tags,
+		temporaryChatEnabled,
+		user
 	} from '$lib/stores';
-	import { onMount, getContext, tick, onDestroy } from 'svelte';
+	import { getContext, onDestroy, onMount, tick } from 'svelte';
 
 	const i18n = getContext('i18n');
 
 	import {
-		deleteChatById,
-		getChatList,
 		getAllTags,
-		getChatListBySearchText,
-		createNewChat,
-		getPinnedChatList,
-		toggleChatPinnedStatusById,
-		getChatPinnedStatusById,
 		getChatById,
-		updateChatFolderIdById,
-		importChat
+		getChatList,
+		getChatListBySearchText,
+		getPinnedChatList,
+		importChat,
+		toggleChatPinnedStatusById,
+		updateChatFolderIdById
 	} from '$lib/apis/chats';
 	import { createNewFolder, getFolders, updateFolderParentIdById } from '$lib/apis/folders';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
-	import ArchivedChatsModal from './Sidebar/ArchivedChatsModal.svelte';
-	import UserMenu from './Sidebar/UserMenu.svelte';
-	import ChatItem from './Sidebar/ChatItem.svelte';
-	import Spinner from '../common/Spinner.svelte';
-	import Loader from '../common/Loader.svelte';
-	import AddFilesPlaceholder from '../AddFilesPlaceholder.svelte';
-	import SearchInput from './Sidebar/SearchInput.svelte';
+	import { createNewChannel, getChannels } from '$lib/apis/channels';
 	import Folder from '../common/Folder.svelte';
-	import Plus from '../icons/Plus.svelte';
-	import Tooltip from '../common/Tooltip.svelte';
-	import Folders from './Sidebar/Folders.svelte';
-	import { getChannels, createNewChannel } from '$lib/apis/channels';
-	import ChannelModal from './Sidebar/ChannelModal.svelte';
-	import ChannelItem from './Sidebar/ChannelItem.svelte';
+	import Loader from '../common/Loader.svelte';
+	import Spinner from '../common/Spinner.svelte';
 	import PencilSquare from '../icons/PencilSquare.svelte';
-	import Home from '../icons/Home.svelte';
+	import ArchivedChatsModal from './Sidebar/ArchivedChatsModal.svelte';
+	import ChannelItem from './Sidebar/ChannelItem.svelte';
+	import ChannelModal from './Sidebar/ChannelModal.svelte';
+	import ChatItem from './Sidebar/ChatItem.svelte';
+	import DomainLookups from './Sidebar/DomainLookups.svelte';
+	import Folders from './Sidebar/Folders.svelte';
+	import SearchInput from './Sidebar/SearchInput.svelte';
+	import UserMenu from './Sidebar/UserMenu.svelte';
 
 	const BREAKPOINT = 768;
 
@@ -890,7 +882,9 @@
 		</div>
 
 		<div class="px-2">
-			<div class="flex flex-col font-primary">
+			<div class="flex flex-col font-primary space-y-2">
+				<DomainLookups />
+
 				{#if $user !== undefined && $user !== null}
 					<UserMenu
 						role={$user?.role}

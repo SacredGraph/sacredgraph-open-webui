@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
-	import { createEventDispatcher, getContext, onMount } from 'svelte';
+	import { createEventDispatcher, getContext } from 'svelte';
 
-	import { flyAndScale } from '$lib/utils/transitions';
-	import { goto } from '$app/navigation';
-	import ArchiveBox from '$lib/components/icons/ArchiveBox.svelte';
-	import { showSettings, activeUserIds, USAGE_POOL, mobile, showSidebar, user } from '$lib/stores';
-	import { fade, slide } from 'svelte/transition';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { userSignOut } from '$lib/apis/auths';
+	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import ArchiveBox from '$lib/components/icons/ArchiveBox.svelte';
+	import User from '$lib/components/icons/User.svelte';
+	import { activeUserIds, mobile, showSettings, showSidebar, USAGE_POOL, user } from '$lib/stores';
+	import { fade } from 'svelte/transition';
 
 	const i18n = getContext('i18n');
 
@@ -70,6 +69,18 @@
 					</svg>
 				</div>
 				<div class=" self-center truncate">{$i18n.t('Settings')}</div>
+			</button>
+
+			<button
+				class="flex rounded-md py-2 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+				on:click={() => {
+					window.Outseta.profile.open();
+				}}
+			>
+				<div class=" self-center mr-3">
+					<User className="size-5" />
+				</div>
+				<div class=" self-center truncate">{$i18n.t('Profile')}</div>
 			</button>
 
 			<button
@@ -156,6 +167,8 @@
 			<button
 				class="flex rounded-md py-2 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
 				on:click={async () => {
+					window.Outseta.setAccessToken();
+
 					await userSignOut();
 					user.set(null);
 

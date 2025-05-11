@@ -1,11 +1,10 @@
-import logging
-import sys
+import asyncio
 import inspect
 import json
-import asyncio
-
-from pydantic import BaseModel
+import logging
+import sys
 from typing import AsyncGenerator, Generator, Iterator
+
 from fastapi import (
     Depends,
     FastAPI,
@@ -16,36 +15,26 @@ from fastapi import (
     UploadFile,
     status,
 )
-from starlette.responses import Response, StreamingResponse
-
-
-from open_webui.socket.main import (
-    get_event_call,
-    get_event_emitter,
-)
-
-
+from open_webui.env import GLOBAL_LOG_LEVEL, SRC_LOG_LEVELS
 from open_webui.models.functions import Functions
 from open_webui.models.models import Models
-
-from open_webui.utils.plugin import load_function_module_by_id
-from open_webui.utils.tools import get_tools
+from open_webui.socket.main import get_event_call, get_event_emitter
 from open_webui.utils.access_control import has_access
-
-from open_webui.env import SRC_LOG_LEVELS, GLOBAL_LOG_LEVEL
-
 from open_webui.utils.misc import (
     add_or_update_system_message,
     get_last_user_message,
-    prepend_to_first_user_message_content,
     openai_chat_chunk_message_template,
     openai_chat_completion_message_template,
+    prepend_to_first_user_message_content,
 )
 from open_webui.utils.payload import (
     apply_model_params_to_body_openai,
     apply_model_system_prompt_to_body,
 )
-
+from open_webui.utils.plugin import load_function_module_by_id
+from open_webui.utils.tools import get_tools
+from pydantic import BaseModel
+from starlette.responses import Response, StreamingResponse
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
@@ -234,6 +223,7 @@ async def generate_function_chat_completion(
             "email": user.email,
             "name": user.name,
             "role": user.role,
+            "outseta_id": user.outseta_id,
         },
         "__metadata__": metadata,
         "__request__": request,

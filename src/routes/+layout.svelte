@@ -1,52 +1,52 @@
 <script>
+	import PyodideWorker from '$lib/workers/pyodide.worker?worker';
 	import { io } from 'socket.io-client';
 	import { spring } from 'svelte/motion';
-	import PyodideWorker from '$lib/workers/pyodide.worker?worker';
 
 	let loadingProgress = spring(0, {
 		stiffness: 0.05
 	});
 
-	import { onMount, tick, setContext } from 'svelte';
-	import {
-		config,
-		user,
-		settings,
-		theme,
-		WEBUI_NAME,
-		mobile,
-		socket,
-		activeUserIds,
-		USAGE_POOL,
-		chatId,
-		chats,
-		currentChatPage,
-		tags,
-		temporaryChatEnabled,
-		isLastActiveTab,
-		isApp,
-		appInfo,
-		toolServers
-	} from '$lib/stores';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import {
+		USAGE_POOL,
+		WEBUI_NAME,
+		activeUserIds,
+		appInfo,
+		chatId,
+		chats,
+		config,
+		currentChatPage,
+		isApp,
+		isLastActiveTab,
+		mobile,
+		settings,
+		socket,
+		tags,
+		temporaryChatEnabled,
+		theme,
+		toolServers,
+		user
+	} from '$lib/stores';
+	import { onMount, setContext, tick } from 'svelte';
 	import { Toaster, toast } from 'svelte-sonner';
 
 	import { executeToolServer, getBackendConfig } from '$lib/apis';
 	import { getSessionUser } from '$lib/apis/auths';
 
-	import '../tailwind.css';
 	import '../app.css';
+	import '../tailwind.css';
 
 	import 'tippy.js/dist/tippy.css';
 
-	import { WEBUI_BASE_URL, WEBUI_HOSTNAME } from '$lib/constants';
-	import i18n, { initI18n, getLanguages, changeLanguage } from '$lib/i18n';
-	import { bestMatchingLanguage } from '$lib/utils';
 	import { getAllTags, getChatList } from '$lib/apis/chats';
+	import { chatCompletion } from '$lib/apis/openai';
 	import NotificationToast from '$lib/components/NotificationToast.svelte';
 	import AppSidebar from '$lib/components/app/AppSidebar.svelte';
-	import { chatCompletion } from '$lib/apis/openai';
+	import { WEBUI_BASE_URL } from '$lib/constants';
+	import i18n, { changeLanguage, getLanguages, initI18n } from '$lib/i18n';
+	import { bestMatchingLanguage } from '$lib/utils';
 
 	setContext('i18n', i18n);
 
@@ -224,6 +224,9 @@
 			if (cb) {
 				cb(JSON.parse(JSON.stringify(res)));
 			}
+
+			// Emit tool used event
+			$socket?.emit('tool:used');
 		} else {
 			if (cb) {
 				cb(
@@ -613,6 +616,16 @@
 	<!-- feel free to make a PR to fix if anyone wants to see it return -->
 	<!-- <link rel="stylesheet" type="text/css" href="/themes/rosepine.css" />
 	<link rel="stylesheet" type="text/css" href="/themes/rosepine-dawn.css" /> -->
+
+	<script>
+		var o_options = {
+			domain: 'nextdomain.outseta.com',
+			load: 'auth,nocode,profile,support',
+			tokenStorage: 'cookie'
+		};
+	</script>
+
+	<script src="https://cdn.outseta.com/outseta.min.js" data-options="o_options"></script>
 </svelte:head>
 
 {#if loaded}
