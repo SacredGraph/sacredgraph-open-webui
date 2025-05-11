@@ -60,6 +60,12 @@ const proxyOptions = {
 
 app.use('/', createProxyMiddleware(proxyOptions));
 
+console.log('PROXY PORT', port);
+console.log('PROXY OUTSETA_DOMAIN', OUTSETA_DOMAIN);
+console.log('PROXY JWKS_URL', JWKS_URL);
+console.log('PROXY PROXY_FRONTEND_URL', process.env.PROXY_FRONTEND_URL);
+console.log('PROXY PROXY_TARGET', process.env.PROXY_TARGET);
+
 // Start the server
 app.listen(port, () => {
 	console.log(`Proxy server running on http://localhost:${port}`);
