@@ -40,6 +40,9 @@ RUN npm run build
 FROM node:22-alpine3.20 AS proxy
 ARG BUILD_HASH
 
+ENV PORT=8081
+ENV FRONTEND_URL="https://app.nextdomain.ai"
+ENV TARGET="http://localhost:8080"
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 WORKDIR /proxy

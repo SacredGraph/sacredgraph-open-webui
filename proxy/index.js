@@ -18,7 +18,7 @@ const JWKS_URL = `https://${OUTSETA_DOMAIN}/.well-known/jwks`;
 app.use(async (req, res, next) => {
 	if (req.query.access_token) {
 		res.cookie('Outseta.nocode.accessToken', req.query.access_token);
-		res.redirect('http://localhost:5173/');
+		res.redirect(process.env.FRONTEND_URL || 'http://localhost:5173/');
 		return;
 	}
 
