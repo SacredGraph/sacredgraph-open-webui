@@ -40,9 +40,6 @@ RUN npm run build
 FROM node:22-alpine3.20 AS proxy
 ARG BUILD_HASH
 
-ENV PORT=8081
-ENV FRONTEND_URL="https://app.nextdomain.ai"
-ENV TARGET="http://localhost:8080"
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 WORKDIR /proxy
@@ -191,6 +188,11 @@ USER $UID:$GID
 ARG BUILD_HASH
 ENV WEBUI_BUILD_VERSION=${BUILD_HASH}
 ENV DOCKER=true
+ENV PROXY_PORT=8081
+ENV PROXY_FRONTEND_URL="https://app.nextdomain.ai"
+ENV PROXY_TARGET="http://localhost:8080"
+ENV OUTSETA_DOMAIN="nextdomain.outseta.com"
 
 CMD [ "node", "proxy/index.js", "&" ]
+
 CMD [ "bash", "start.sh"]

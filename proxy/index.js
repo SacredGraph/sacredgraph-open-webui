@@ -5,7 +5,7 @@ const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PROXY_PORT || 3000;
 
 // Use cookie parser middleware
 app.use(cookieParser());
@@ -18,7 +18,7 @@ const JWKS_URL = `https://${OUTSETA_DOMAIN}/.well-known/jwks`;
 app.use(async (req, res, next) => {
 	if (req.query.access_token) {
 		res.cookie('Outseta.nocode.accessToken', req.query.access_token);
-		res.redirect(process.env.FRONTEND_URL || 'http://localhost:5173/');
+		res.redirect(process.env.PROXY_FRONTEND_URL || 'http://localhost:5173/');
 		return;
 	}
 
@@ -46,7 +46,7 @@ app.use(async (req, res, next) => {
 	next();
 });
 
-const target = process.env.TARGET || 'http://localhost:8081';
+const target = process.env.PROXY_TARGET || 'http://localhost:8081';
 
 // Proxy configuration
 const proxyOptions = {
