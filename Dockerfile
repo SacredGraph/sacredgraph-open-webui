@@ -46,7 +46,6 @@ RUN npm ci
 
 COPY proxy/ .
 ENV APP_BUILD_HASH=${BUILD_HASH}
-RUN npm run build
 
 ######## WebUI backend ########
 FROM python:3.11-slim-bookworm AS base
