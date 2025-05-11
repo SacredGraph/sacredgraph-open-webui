@@ -16,6 +16,8 @@ const JWKS_URL = `https://${OUTSETA_DOMAIN}/.well-known/jwks`;
 
 // Middleware to verify JWT and inject headers
 app.use(async (req, res, next) => {
+	console.log('req.query.access_token', req.query.access_token);
+
 	if (req.query.access_token) {
 		res.cookie('Outseta.nocode.accessToken', req.query.access_token);
 		res.redirect(process.env.PROXY_FRONTEND_URL || 'http://localhost:5173/');

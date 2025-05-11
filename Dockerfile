@@ -193,6 +193,6 @@ ENV PROXY_FRONTEND_URL="https://app.nextdomain.ai"
 ENV PROXY_TARGET="http://localhost:8080"
 ENV OUTSETA_DOMAIN="nextdomain.outseta.com"
 
-CMD [ "node", "proxy/index.js", "&" ]
+CMD [ "node", "proxy/index.js", "2>&1", "&" ]
 
 CMD [ "bash", "start.sh"]
