@@ -58,6 +58,10 @@ const proxyOptions = {
 	logLevel: 'debug'
 };
 
+app.get('/health', (req, res) => {
+	res.json({ status: true });
+});
+
 app.use('/', createProxyMiddleware(proxyOptions));
 
 console.log('PROXY PORT', port);
