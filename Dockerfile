@@ -32,9 +32,6 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-ENV APP_BUILD_HASH=${BUILD_HASH}
-RUN npm run build
-
 
 ######## Proxy server ########
 FROM node:22-alpine3.20 AS proxy
