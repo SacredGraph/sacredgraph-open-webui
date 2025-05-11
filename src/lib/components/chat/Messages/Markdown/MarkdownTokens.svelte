@@ -1,5 +1,4 @@
 <script lang="ts">
-	import DOMPurify from 'dompurify';
 	import { createEventDispatcher, getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
@@ -21,7 +20,8 @@
 	import KatexRenderer from './KatexRenderer.svelte';
 
 	import { settings } from '$lib/stores';
-	import Source from './Source.svelte';
+
+	import HtmlToken from './HTMLToken.svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -31,6 +31,9 @@
 	export let attributes = {};
 
 	export let save = false;
+
+	export let onUpdate: Function = () => {};
+	export let onCode: Function = () => {};
 
 	export let onTaskClick: Function = () => {};
 	export let onSourceClick: Function = () => {};
@@ -94,11 +97,9 @@
 				code={token?.text ?? ''}
 				{attributes}
 				{save}
-				onCode={(value) => {
-					dispatch('code', value);
-				}}
+				{onCode}
 				onSave={(value) => {
-					dispatch('update', {
+					onUpdate({
 						raw: token.raw,
 						oldContent: token.text,
 						newContent: value
@@ -276,16 +277,7 @@
 			</Collapsible>
 		{/if}
 	{:else if token.type === 'html'}
-		{@const html = DOMPurify.sanitize(token.text)}
-		{#if html && html.includes('<video')}
-			{@html html}
-		{:else if token.text.includes(`<iframe src="${WEBUI_BASE_URL}/api/v1/files/`)}
-			{@html `${token.text}`}
-		{:else if token.text.includes(`<source_id`)}
-			<Source {id} {token} onClick={onSourceClick} />
-		{:else}
-			{token.text}
-		{/if}
+		<HtmlToken {id} {token} {onSourceClick} />
 	{:else if token.type === 'iframe'}
 		<iframe
 			src="{WEBUI_BASE_URL}/api/v1/files/{token.fileId}/content"
