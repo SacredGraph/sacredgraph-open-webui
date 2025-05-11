@@ -176,21 +176,26 @@ COPY --chown=$UID:$GID --from=build /app/build /app/build
 COPY --chown=$UID:$GID --from=build /app/CHANGELOG.md /app/CHANGELOG.md
 COPY --chown=$UID:$GID --from=build /app/package.json /app/package.json
 
+COPY --chown=$UID:$GID --from=proxy /proxy/node_modules /proxy/node_modules
+COPY --chown=$UID:$GID --from=proxy /proxy/package.json /proxy/package.json
+COPY --chown=$UID:$GID --from=proxy /proxy/package-lock.json /proxy/package-lock.json
+COPY --chown=$UID:$GID --from=proxy /proxy/index.js /proxy/index.js
+
 # copy backend files
 COPY --chown=$UID:$GID ./backend .
 
-EXPOSE 8080
+EXPOSE 8081
 
-HEALTHCHECK CMD curl --silent --fail http://localhost:${PORT:-8081}/health | jq -ne 'input.status == true' || exit 1
+HEALTHCHECK CMD curl --silent --fail http://localhost:${PORT:-8080}/health | jq -ne 'input.status == true' || exit 1
 
 USER $UID:$GID
 
 ARG BUILD_HASH
 ENV WEBUI_BUILD_VERSION=${BUILD_HASH}
 ENV DOCKER=true
-ENV PROXY_PORT=8080
+ENV PROXY_PORT=8081
 ENV PROXY_FRONTEND_URL="https://app.nextdomain.ai"
-ENV PROXY_TARGET="http://localhost:8081"
+ENV PROXY_TARGET="http://localhost:8080"
 ENV OUTSETA_DOMAIN="nextdomain.outseta.com"
 
 CMD [ "node", "/proxy/index.js", "2>&1", "&" ]
