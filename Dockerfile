@@ -32,6 +32,9 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+ENV APP_BUILD_HASH=${BUILD_HASH}
+RUN npm run build
+
 
 ######## Proxy server ########
 FROM node:22-alpine3.20 AS proxy
@@ -45,7 +48,6 @@ COPY proxy/package.json proxy/package-lock.json ./
 RUN npm ci
 
 COPY proxy/ .
-ENV APP_BUILD_HASH=${BUILD_HASH}
 
 ######## WebUI backend ########
 FROM python:3.11-slim-bookworm AS base
