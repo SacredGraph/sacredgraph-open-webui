@@ -63,7 +63,7 @@ ARG GID
 
 ## Basis ##
 ENV ENV=prod \
-    PORT=8080 \
+    PORT=8081 \
     # pass build args to the build
     USE_OLLAMA_DOCKER=${USE_OLLAMA} \
     USE_CUDA_DOCKER=${USE_CUDA} \
@@ -179,18 +179,18 @@ COPY --chown=$UID:$GID --from=build /app/package.json /app/package.json
 # copy backend files
 COPY --chown=$UID:$GID ./backend .
 
-EXPOSE 8081
+EXPOSE 8080
 
-HEALTHCHECK CMD curl --silent --fail http://localhost:${PORT:-8080}/health | jq -ne 'input.status == true' || exit 1
+HEALTHCHECK CMD curl --silent --fail http://localhost:${PORT:-8081}/health | jq -ne 'input.status == true' || exit 1
 
 USER $UID:$GID
 
 ARG BUILD_HASH
 ENV WEBUI_BUILD_VERSION=${BUILD_HASH}
 ENV DOCKER=true
-ENV PROXY_PORT=8081
+ENV PROXY_PORT=8080
 ENV PROXY_FRONTEND_URL="https://app.nextdomain.ai"
-ENV PROXY_TARGET="http://localhost:8080"
+ENV PROXY_TARGET="http://localhost:8081"
 ENV OUTSETA_DOMAIN="nextdomain.outseta.com"
 
 CMD [ "node", "/proxy/index.js", "2>&1", "&" ]
