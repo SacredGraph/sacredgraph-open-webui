@@ -50,7 +50,7 @@ RUN npm ci
 COPY proxy/ .
 
 ######## WebUI backend ########
-FROM python:3.11-slim-bookworm AS base
+FROM python3.13-nodejs24 AS base
 
 # Use args
 ARG USE_CUDA
@@ -164,18 +164,6 @@ RUN pip3 install --no-cache-dir uv && \
     python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
     fi; \
     chown -R $UID:$GID /app/backend/data/
-
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    build-essential \
-    python3-dev \
-    portaudio19-dev \
-    bash \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
 
 # copy embedding weight from build
 # RUN mkdir -p /root/.cache/chroma/onnx_models/all-MiniLM-L6-v2
