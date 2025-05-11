@@ -50,7 +50,7 @@ RUN npm ci
 COPY proxy/ .
 
 ######## WebUI backend ########
-FROM nikolaik/python-nodejs:latest AS base
+FROM nikolaik/python-nodejs:python3.13-nodejs22 AS base
 
 # Use args
 ARG USE_CUDA
