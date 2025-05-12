@@ -151,6 +151,8 @@
 		} else {
 			onboarding = $config?.onboarding ?? false;
 		}
+
+		window.Outseta.initAuth();
 	});
 </script>
 

@@ -656,7 +656,7 @@
 	<script>
 		var o_options = {
 			domain: 'nextdomain.outseta.com',
-			load: 'auth,nocode,profile,support',
+			load: 'auth,customForm,emailList,leadCapture,nocode,profile,support',
 			tokenStorage: 'cookie'
 		};
 	</script>
