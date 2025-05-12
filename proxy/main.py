@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from fastapi import Cookie, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from fastapi_proxy_lib.core import ProxyCore
 from jose import JWTError, jwt
 
 # Load environment variables
@@ -41,8 +42,8 @@ _jwks_cache: Dict[str, Tuple[dict, float]] = (
     {}
 )  # Cache storage: {url: (jwks, expiration_time)}
 
-# HTTP client for making requests
-http_client = httpx.AsyncClient(base_url=TARGET_URL)
+# Initialize proxy
+proxy = ProxyCore(base_url=TARGET_URL)
 
 
 async def get_jwks() -> dict:
@@ -111,7 +112,7 @@ async def proxy_request(
         )
         return response
 
-    # Verify JWT token
+    # Verify JWT token and prepare headers
     headers = dict(request.headers)
     if outseta_token:
         logger.info(f"[PROXY] token: {outseta_token}")
@@ -126,23 +127,5 @@ async def proxy_request(
             ).strip()
             logger.info(f"[PROXY] headers: {headers}")
 
-    # Forward the request to the target
-    target_path = request.url.path
-    if request.url.query:
-        target_path += f"?{request.url.query}"
-
-    try:
-        response = await http_client.request(
-            method=request.method,
-            url=target_path,
-            headers=headers,
-            content=await request.body(),
-        )
-        return Response(
-            content=response.content,
-            status_code=response.status_code,
-            headers=dict(response.headers),
-        )
-    except Exception as e:
-        logger.error(f"Error forwarding request: {e}")
-        raise HTTPException(status_code=500, detail="Error forwarding request")
+    # Use fastapi-proxy-lib to forward the request
+    return await proxy.proxy_request(request, headers=headers)
