@@ -122,23 +122,35 @@ async def proxy_request(
         )
         return response
 
-    headers = MutableHeaders(request._headers)
-
     if outseta_token:
         logger.info(f"[PROXY] token: {outseta_token}")
         payload = await verify_jwt(outseta_token)
 
         if payload:
             logger.info(f"[PROXY] payload: {payload}")
-            headers["X-User-Id"] = payload.get("outseta:accountUid", "")
-            headers["X-User-Email"] = payload.get("email", "")
-            headers["X-User-Name"] = (
-                payload.get("name", "") or payload.get("email", "")
-            ).strip()
-            logger.info(f"[PROXY] headers: {headers}")
 
-    request._headers = headers
-    request.scope.update(headers=request.headers.raw)
+            request.headers.__dict__["_list"].append(
+                (
+                    "X-User-Id".encode(),
+                    payload.get("outseta:accountUid", "").encode(),
+                )
+            )
+
+            request.headers.__dict__["_list"].append(
+                (
+                    "X-User-Email".encode(),
+                    payload.get("email", "").encode(),
+                )
+            )
+
+            request.headers.__dict__["_list"].append(
+                (
+                    "X-User-Name".encode(),
+                    (payload.get("name", "") or payload.get("email", ""))
+                    .strip()
+                    .encode(),
+                )
+            )
 
     # Use fastapi-proxy-lib to forward the request
     return await proxy.proxy(request=request, path=path)
