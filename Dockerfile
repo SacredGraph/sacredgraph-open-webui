@@ -50,7 +50,7 @@ RUN npm ci
 COPY proxy/ .
 
 ######## WebUI backend ########
-FROM nikolaik/python-nodejs:python3.13-nodejs22 AS base
+FROM nikolaik/python-nodejs:python3.11-nodejs22 AS base
 
 # Use args
 ARG USE_CUDA
@@ -152,8 +152,8 @@ RUN pip3 install --no-cache-dir uv
 
 RUN if [ "$USE_CUDA" = "true" ]; then \
     # If you use CUDA the whisper and embedding model will be downloaded on first use
-    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
-    uv pip install --system -r requirements.txt --no-cache-dir && \
+    pip3 install torch torchvision torchaudio --pre --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
+    uv pip install --system -r requirements.txt --pre --no-cache-dir && \
     python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
     python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
     python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
@@ -198,8 +198,6 @@ ENV PROXY_FRONTEND_URL="https://app.nextdomain.ai"
 ENV PROXY_TARGET="http://localhost:8080"
 ENV OUTSETA_DOMAIN="nextdomain.outseta.com"
 
-CMD [ "node", "/proxy/index.js" ]
+CMD [ "node", "/proxy/index.js", "2>&1", "&" ]
 
-# CMD [ "node", "/proxy/index.js", "2>&1", "&" ]
-
-# CMD [ "bash", "start.sh"]
+CMD [ "bash", "start.sh"]
