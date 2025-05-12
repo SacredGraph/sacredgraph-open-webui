@@ -21,9 +21,7 @@ PORT = int(os.getenv("PROXY_PORT", "3000"))
 OUTSETA_DOMAIN = os.getenv("OUTSETA_DOMAIN", "nextdomain.outseta.com")
 JWKS_URL = f"https://{OUTSETA_DOMAIN}/.well-known/jwks"
 FRONTEND_URL = os.getenv("PROXY_FRONTEND_URL", "http://localhost:5173")
-TARGET_URL = (
-    "http://example.com/"  # os.getenv("PROXY_TARGET", "http://localhost:8081/")
-)
+TARGET_URL = os.getenv("PROXY_TARGET", "http://localhost:8081/")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
