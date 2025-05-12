@@ -20,37 +20,42 @@ ARG BUILD_HASH=dev-build
 ARG UID=0
 ARG GID=0
 
-######## WebUI frontend ########
-FROM node:22-alpine3.20 AS build
-ARG BUILD_HASH
+# ######## WebUI frontend ########
+# FROM node:22-alpine3.20 AS build
+# ARG BUILD_HASH
 
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+# ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-WORKDIR /app
+# WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci
+# COPY package.json package-lock.json ./
+# RUN npm ci
 
-COPY . .
-ENV APP_BUILD_HASH=${BUILD_HASH}
-RUN npm run build
+# COPY . .
+# ENV APP_BUILD_HASH=${BUILD_HASH}
+# RUN npm run build
 
 
 ######## Proxy server ########
-FROM node:22-alpine3.20 AS proxy
+FROM python:3.11-slim AS proxy
 ARG BUILD_HASH
-
-ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 WORKDIR /proxy
 
-COPY proxy/package.json proxy/package-lock.json ./
-RUN npm ci
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
+# Copy requirements first to leverage Docker cache
+COPY proxy/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the proxy code
 COPY proxy/ .
 
 ######## WebUI backend ########
-FROM nikolaik/python-nodejs:python3.11-nodejs22 AS base
+FROM python:3.11-slim AS base
 
 # Use args
 ARG USE_CUDA
@@ -171,15 +176,18 @@ RUN chown -R $UID:$GID /app/backend/data/
 # RUN mkdir -p /root/.cache/chroma/onnx_models/all-MiniLM-L6-v2
 # COPY --from=build /app/onnx /root/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx
 
-# copy built frontend files
-COPY --chown=$UID:$GID --from=build /app/build /app/build
-COPY --chown=$UID:$GID --from=build /app/CHANGELOG.md /app/CHANGELOG.md
-COPY --chown=$UID:$GID --from=build /app/package.json /app/package.json
+# # copy built frontend files
+# COPY --chown=$UID:$GID --from=build /app/build /app/build
+# COPY --chown=$UID:$GID --from=build /app/CHANGELOG.md /app/CHANGELOG.md
+# COPY --chown=$UID:$GID --from=build /app/package.json /app/package.json
 
-COPY --chown=$UID:$GID --from=proxy /proxy/node_modules /proxy/node_modules
-COPY --chown=$UID:$GID --from=proxy /proxy/package.json /proxy/package.json
-COPY --chown=$UID:$GID --from=proxy /proxy/package-lock.json /proxy/package-lock.json
-COPY --chown=$UID:$GID --from=proxy /proxy/index.js /proxy/index.js
+# COPY --chown=$UID:$GID --from=proxy /proxy/node_modules /proxy/node_modules
+# COPY --chown=$UID:$GID --from=proxy /proxy/package.json /proxy/package.json
+# COPY --chown=$UID:$GID --from=proxy /proxy/package-lock.json /proxy/package-lock.json
+# COPY --chown=$UID:$GID --from=proxy /proxy/index.js /proxy/index.js
+
+COPY --chown=$UID:$GID /CHANGELOG.md /app/CHANGELOG.md
+COPY --chown=$UID:$GID --from=proxy /proxy ./proxy
 
 # copy backend files
 COPY --chown=$UID:$GID ./backend .

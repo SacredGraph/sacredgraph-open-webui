@@ -1,56 +1,65 @@
-# OpenWebUI Outseta Proxy
+# Python Proxy Server
 
-This proxy server verifies Outseta JWT tokens and injects trusted headers for OpenWebUI authentication.
+This is a Python implementation of the proxy server that handles authentication and request forwarding. It's built using FastAPI and provides the same functionality as the Node.js version.
 
-## Setup
+## Features
 
-1. Install dependencies:
+- JWT token verification using Outseta
+- Request forwarding with header injection
+- Cookie-based authentication
+- Health check endpoint
+- CORS support
+- Environment variable configuration
 
-```bash
-npm install
-```
+## Prerequisites
 
-2. Create a `.env` file in the project root with the following variables:
+- Python 3.8 or higher
+- pip (Python package manager)
 
-```
-PORT=3000
-OUTSETA_DOMAIN=your-domain.outseta.com
-```
+## Installation
 
-Replace `your-domain.outseta.com` with your actual Outseta domain.
-
-## Usage
-
-1. Start the proxy server:
+1. Create a virtual environment (recommended):
 
 ```bash
-npm start
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-2. The proxy will run on `http://localhost:3000` and forward requests to OpenWebUI running on `http://localhost:5173`.
-
-3. When a request comes in:
-   - The proxy checks for an Outseta JWT token in the `token` cookie
-   - If the token is valid, it extracts the user's email and name
-   - These are injected as `x-user-email` and `x-user-name` headers
-   - The request is forwarded to OpenWebUI
-   - If the token is invalid or missing, the user is redirected to `http://localhost:5173/auth`
-
-## Development
-
-To run in development mode with auto-reload:
+2. Install dependencies:
 
 ```bash
-npm run dev
+pip install -r requirements.txt
 ```
 
 ## Configuration
 
-The proxy can be configured through environment variables:
+Create a `.env` file in the project root with the following variables:
 
-- `PORT`: The port the proxy server will listen on (default: 3000)
-- `OUTSETA_DOMAIN`: Your Outseta domain (required)
+```env
+PROXY_PORT=3000
+OUTSETA_DOMAIN=your-outseta-domain
+PROXY_FRONTEND_URL=http://localhost:5173
+PROXY_TARGET=http://localhost:8081
+```
 
-## Cookie Requirements
+## Running the Server
 
-The proxy expects the Outseta JWT token to be present in a cookie named `token`. This cookie should be set by your Outseta authentication flow.
+To start the server:
+
+```bash
+python main.py
+```
+
+The server will start on the configured port (default: 3000).
+
+## API Endpoints
+
+- `GET /health` - Health check endpoint
+- `GET /` - Main proxy endpoint that handles authentication and request forwarding
+
+## Development
+
+The server uses FastAPI, which provides automatic API documentation. Once the server is running, you can access:
+
+- Swagger UI: `http://localhost:3000/docs`
+- ReDoc: `http://localhost:3000/redoc`

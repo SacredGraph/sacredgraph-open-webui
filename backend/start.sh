@@ -16,6 +16,7 @@ fi
 
 KEY_FILE=.webui_secret_key
 
+PROXY_PORT="8081" # "${PORT:-8080}"
 PORT="8080" # "${PORT:-8080}"
 HOST="0.0.0.0" # "${HOST:-0.0.0.0}"
 if test "$WEBUI_SECRET_KEY $WEBUI_JWT_SECRET_KEY" = " "; then
@@ -67,8 +68,7 @@ fi
 
 PYTHON_CMD=$(command -v python3 || command -v python)
 
-node /proxy/index.js &
-
+exec "$PYTHON_CMD" -m uvicorn proxy.main:app --host "$HOST" --port "$PROXY_PORT" --forwarded-allow-ips '*' --workers "${UVICORN_WORKERS:-1}" &
 WEBUI_SECRET_KEY="$WEBUI_SECRET_KEY" exec "$PYTHON_CMD" -m uvicorn open_webui.main:app --host "$HOST" --port "$PORT" --forwarded-allow-ips '*' --workers "${UVICORN_WORKERS:-1}" &
 
 wait -n
