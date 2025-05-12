@@ -1,24 +1,45 @@
 import logging
 import os
 import time
-from typing import Dict, Optional, Tuple
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, Dict, Optional, Tuple
 
-import httpx
 from dotenv import load_dotenv
 from fastapi import Cookie, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from fastapi_proxy_lib.core import ProxyCore
+from fastapi_proxy_lib.core.http import ReverseHttpProxy
+from httpx import AsyncClient
 from jose import JWTError, jwt
+from starlette.requests import Request
 
 # Load environment variables
 load_dotenv()
+
+# Configuration
+PORT = int(os.getenv("PROXY_PORT", "3000"))
+OUTSETA_DOMAIN = os.getenv("OUTSETA_DOMAIN", "nextdomain.outseta.com")
+JWKS_URL = f"https://{OUTSETA_DOMAIN}/.well-known/jwks"
+FRONTEND_URL = os.getenv("PROXY_FRONTEND_URL", "http://localhost:5173")
+TARGET_URL = (
+    "http://example.com/"  # os.getenv("PROXY_TARGET", "http://localhost:8081/")
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+proxy = ReverseHttpProxy(AsyncClient(), base_url=TARGET_URL)
+
+
+@asynccontextmanager
+async def close_proxy_event(_: FastAPI) -> AsyncIterator[None]:
+    """Close proxy."""
+    yield
+    await proxy.aclose()
+
+
+app = FastAPI(lifespan=close_proxy_event)
 
 # CORS middleware configuration
 app.add_middleware(
@@ -29,21 +50,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configuration
-PORT = int(os.getenv("PROXY_PORT", "3000"))
-OUTSETA_DOMAIN = os.getenv("OUTSETA_DOMAIN")
-JWKS_URL = f"https://{OUTSETA_DOMAIN}/.well-known/jwks"
-FRONTEND_URL = os.getenv("PROXY_FRONTEND_URL", "http://localhost:5173")
-TARGET_URL = os.getenv("PROXY_TARGET", "http://localhost:8081")
-
 # JWKS cache configuration
 JWKS_CACHE_TTL = 3600  # Cache JWKS for 1 hour
 _jwks_cache: Dict[str, Tuple[dict, float]] = (
     {}
 )  # Cache storage: {url: (jwks, expiration_time)}
-
-# Initialize proxy
-proxy = ProxyCore(base_url=TARGET_URL)
 
 
 async def get_jwks() -> dict:
@@ -59,7 +70,7 @@ async def get_jwks() -> dict:
 
     # Fetch fresh JWKS
     logger.info("[PROXY] Fetching fresh JWKS")
-    async with httpx.AsyncClient() as client:
+    async with AsyncClient() as client:
         jwks_response = await client.get(JWKS_URL)
         jwks = jwks_response.json()
 
@@ -120,12 +131,12 @@ async def proxy_request(
 
         if payload:
             logger.info(f"[PROXY] payload: {payload}")
-            headers["X-User-Id"] = payload.get("outseta:accountUid", "")
-            headers["X-User-Email"] = payload.get("email", "")
-            headers["X-User-Name"] = (
+            request.headers["X-User-Id"] = payload.get("outseta:accountUid", "")
+            request.headers["X-User-Email"] = payload.get("email", "")
+            request.headers["X-User-Name"] = (
                 payload.get("name", "") or payload.get("email", "")
             ).strip()
             logger.info(f"[PROXY] headers: {headers}")
 
     # Use fastapi-proxy-lib to forward the request
-    return await proxy.proxy_request(request, headers=headers)
+    return await proxy.proxy(request=request, path=path)
