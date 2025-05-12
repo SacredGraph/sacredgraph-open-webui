@@ -124,8 +124,6 @@ async def proxy_request(
 
     headers = MutableHeaders(request._headers)
 
-    # Verify JWT token and prepare headers
-    headers = dict(request.headers)
     if outseta_token:
         logger.info(f"[PROXY] token: {outseta_token}")
         payload = await verify_jwt(outseta_token)
