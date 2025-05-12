@@ -66,11 +66,20 @@ if [ -n "$SPACE_ID" ]; then
   export WEBUI_URL=${SPACE_HOST}
 fi
 
+cleanup() {
+    echo "Caught SIGINT. Cleaning up..."
+    kill $server_pid1 $server_pid2  # Terminates both server processes
+    exit
+}
+
+trap cleanup SIGINT
+
 PYTHON_CMD=$(command -v python3 || command -v python)
 
-exec "$PYTHON_CMD" -m uvicorn proxy.main:app --host "$HOST" --port "$PROXY_PORT" --forwarded-allow-ips '*' --workers "${UVICORN_WORKERS:-1}" &
 WEBUI_SECRET_KEY="$WEBUI_SECRET_KEY" exec "$PYTHON_CMD" -m uvicorn open_webui.main:app --host "$HOST" --port "$PORT" --forwarded-allow-ips '*' --workers "${UVICORN_WORKERS:-1}" &
+server_pid1=$!
 
-wait -n
+exec "$PYTHON_CMD" -m uvicorn proxy.main:app --host "$HOST" --port "$PROXY_PORT" --forwarded-allow-ips '*' --workers "${UVICORN_WORKERS:-1}" &
+server_pid2=$!  # Get the process ID of the last backgrounded command
 
-exit $?
+wait
