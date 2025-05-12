@@ -16,7 +16,7 @@ const JWKS_URL = `https://${OUTSETA_DOMAIN}/.well-known/jwks`;
 
 // Middleware to verify JWT and inject headers
 app.use(async (req, res, next) => {
-	console.log('req.query.access_token', req.query.access_token);
+	console.log('[PROXY] req.query.access_token', req.query.access_token);
 
 	if (req.query.access_token) {
 		res.cookie('Outseta.nocode.accessToken', req.query.access_token);
@@ -27,22 +27,22 @@ app.use(async (req, res, next) => {
 	try {
 		const token = req.cookies['Outseta.nocode.accessToken'];
 
-		console.log('token', token);
+		console.log('[PROXY] token', token);
 
 		if (token) {
 			const JWKS = createRemoteJWKSet(new URL(JWKS_URL));
 			const { payload } = await jwtVerify(token, JWKS);
 
-			console.log('payload', payload);
+			console.log('[PROXY] payload', payload);
 
 			req.headers['X-User-Id'] = payload['outseta:accountUid'];
 			req.headers['X-User-Email'] = payload.email;
 			req.headers['X-User-Name'] = payload.name.trim() || payload.email;
 
-			console.log('headers', req.headers);
+			console.log('[PROXY] headers', req.headers);
 		}
 	} catch (error) {
-		console.error('JWT verification failed:', error);
+		console.error('[PROXY] JWT verification failed:', error);
 	}
 
 	next();
@@ -64,14 +64,14 @@ app.get('/health', (req, res) => {
 
 app.use('/', createProxyMiddleware(proxyOptions));
 
-console.log('PROXY PORT', port);
-console.log('PROXY OUTSETA_DOMAIN', OUTSETA_DOMAIN);
-console.log('PROXY JWKS_URL', JWKS_URL);
-console.log('PROXY PROXY_FRONTEND_URL', process.env.PROXY_FRONTEND_URL);
-console.log('PROXY PROXY_TARGET', process.env.PROXY_TARGET);
+console.log('[PROXY] PROXY PORT', port);
+console.log('[PROXY] PROXY OUTSETA_DOMAIN', OUTSETA_DOMAIN);
+console.log('[PROXY] PROXY JWKS_URL', JWKS_URL);
+console.log('[PROXY] PROXY PROXY_FRONTEND_URL', process.env.PROXY_FRONTEND_URL);
+console.log('[PROXY] PROXY PROXY_TARGET', process.env.PROXY_TARGET);
 
 // Start the server
 app.listen(port, () => {
-	console.log(`Proxy server running on http://localhost:${port}`);
-	console.log(`Proxying requests to ${target}`);
+	console.log(`[PROXY] Proxy server running on http://localhost:${port}`);
+	console.log(`[PROXY] Proxying requests to ${target}`);
 });
