@@ -16,8 +16,8 @@ fi
 
 KEY_FILE=.webui_secret_key
 
-PORT="${PORT:-8080}"
-HOST="${HOST:-0.0.0.0}"
+PORT="8080" # "${PORT:-8080}"
+HOST="0.0.0.0" # "${HOST:-0.0.0.0}"
 if test "$WEBUI_SECRET_KEY $WEBUI_JWT_SECRET_KEY" = " "; then
   echo "Loading WEBUI_SECRET_KEY from file, not provided as an environment variable."
 
@@ -69,4 +69,4 @@ PYTHON_CMD=$(command -v python3 || command -v python)
 
 node /proxy/index.js &
 
-WEBUI_SECRET_KEY="$WEBUI_SECRET_KEY" exec "$PYTHON_CMD" -m uvicorn open_webui.main:app --host "$HOST" --port "8080" --forwarded-allow-ips '*' --workers "${UVICORN_WORKERS:-1}"
+WEBUI_SECRET_KEY="$WEBUI_SECRET_KEY" exec "$PYTHON_CMD" -m uvicorn open_webui.main:app --host "$HOST" --port "$PORT" --forwarded-allow-ips '*' --workers "${UVICORN_WORKERS:-1}"
