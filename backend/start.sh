@@ -19,6 +19,7 @@ KEY_FILE=.webui_secret_key
 PROXY_PORT="8081" # "${PORT:-8080}"
 PORT="8080" # "${PORT:-8080}"
 HOST="0.0.0.0" # "${HOST:-0.0.0.0}"
+
 if test "$WEBUI_SECRET_KEY $WEBUI_JWT_SECRET_KEY" = " "; then
   echo "Loading WEBUI_SECRET_KEY from file, not provided as an environment variable."
 
@@ -82,4 +83,6 @@ server_pid1=$!
 exec "$PYTHON_CMD" -m uvicorn proxy.main:app --host "$HOST" --port "$PROXY_PORT" --forwarded-allow-ips '*' --workers "${UVICORN_WORKERS:-1}" &
 server_pid2=$!  # Get the process ID of the last backgrounded command
 
-wait
+wait -n
+
+exit $?

@@ -206,4 +206,4 @@ ENV PROXY_FRONTEND_URL="https://app.nextdomain.ai"
 ENV PROXY_TARGET="http://localhost:8080"
 ENV OUTSETA_DOMAIN="nextdomain.outseta.com"
 
-CMD [ "bash", "start.sh"]
+CMD [ "bash", "start.sh" ]
