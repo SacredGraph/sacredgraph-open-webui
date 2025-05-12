@@ -5,12 +5,13 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator, Dict, Optional, Tuple
 
 from dotenv import load_dotenv
-from fastapi import Cookie, FastAPI, HTTPException, Request, Response
+from fastapi import Cookie, FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi_proxy_lib.core.http import ReverseHttpProxy
 from httpx import AsyncClient
 from jose import JWTError, jwt
+from starlette.datastructures import MutableHeaders
 from starlette.requests import Request
 
 # Load environment variables
@@ -121,6 +122,8 @@ async def proxy_request(
         )
         return response
 
+    headers = MutableHeaders(request._headers)
+
     # Verify JWT token and prepare headers
     headers = dict(request.headers)
     if outseta_token:
@@ -129,12 +132,15 @@ async def proxy_request(
 
         if payload:
             logger.info(f"[PROXY] payload: {payload}")
-            request.headers["X-User-Id"] = payload.get("outseta:accountUid", "")
-            request.headers["X-User-Email"] = payload.get("email", "")
-            request.headers["X-User-Name"] = (
+            headers["X-User-Id"] = payload.get("outseta:accountUid", "")
+            headers["X-User-Email"] = payload.get("email", "")
+            headers["X-User-Name"] = (
                 payload.get("name", "") or payload.get("email", "")
             ).strip()
             logger.info(f"[PROXY] headers: {headers}")
+
+    request._headers = headers
+    request.scope.update(headers=request.headers.raw)
 
     # Use fastapi-proxy-lib to forward the request
     return await proxy.proxy(request=request, path=path)
