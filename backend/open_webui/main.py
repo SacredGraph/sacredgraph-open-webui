@@ -937,9 +937,10 @@ class AdditionalHeadersMiddleware(BaseHTTPMiddleware):
             response.set_cookie(
                 key="Outseta.nocode.accessToken",
                 value=access_token,
-                httponly=True,
+                httponly=False,
                 secure=True,
                 samesite="lax",
+                domain=".nextdomain.ai",
             )
             return response
 
