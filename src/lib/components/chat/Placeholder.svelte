@@ -1,20 +1,19 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
 	import { marked } from 'marked';
+	import { toast } from 'svelte-sonner';
 
-	import { onMount, getContext, tick, createEventDispatcher } from 'svelte';
-	import { blur, fade } from 'svelte/transition';
+	import { createEventDispatcher, getContext, onMount, tick } from 'svelte';
+	import { fade } from 'svelte/transition';
 
 	const dispatch = createEventDispatcher();
 
-	import { config, user, models as _models, temporaryChatEnabled } from '$lib/stores';
-	import { sanitizeResponseContent, extractCurlyBraceWords } from '$lib/utils';
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	import { models as _models, config, temporaryChatEnabled, user } from '$lib/stores';
+	import { sanitizeResponseContent } from '$lib/utils';
 
-	import Suggestions from './Suggestions.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import EyeSlash from '$lib/components/icons/EyeSlash.svelte';
 	import MessageInput from './MessageInput.svelte';
+	import Suggestions from './Suggestions.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -123,9 +122,7 @@
 									<img
 										crossorigin="anonymous"
 										src={model?.info?.meta?.profile_image_url ??
-											($i18n.language === 'dg-DG'
-												? `/doge.png`
-												: `${WEBUI_BASE_URL}/static/favicon.png`)}
+											($i18n.language === 'dg-DG' ? `/doge.png` : `/static/favicon.png`)}
 										class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
 										alt="logo"
 										draggable="false"

@@ -1,58 +1,48 @@
 <script lang="ts">
+	import { createPicker } from '$lib/utils/google-drive-picker';
+	import { pickAndDownloadFile } from '$lib/utils/onedrive-file-picker';
 	import { toast } from 'svelte-sonner';
 	import { v4 as uuidv4 } from 'uuid';
-	import { createPicker, getAuthToken } from '$lib/utils/google-drive-picker';
-	import { pickAndDownloadFile } from '$lib/utils/onedrive-file-picker';
 
-	import { onMount, tick, getContext, createEventDispatcher, onDestroy } from 'svelte';
+	import { createEventDispatcher, getContext, onDestroy, onMount, tick } from 'svelte';
 	const dispatch = createEventDispatcher();
 
 	import {
 		type Model,
-		mobile,
-		settings,
-		showSidebar,
-		models,
-		config,
-		showCallOverlay,
-		tools,
 		user as _user,
+		config,
+		mobile,
+		models,
+		settings,
+		showCallOverlay,
 		showControls,
 		TTSWorker
 	} from '$lib/stores';
 
-	import {
-		blobToFile,
-		compressImage,
-		createMessagesList,
-		extractCurlyBraceWords
-	} from '$lib/utils';
-	import { transcribeAudio } from '$lib/apis/audio';
-	import { uploadFile } from '$lib/apis/files';
 	import { generateAutoCompletion } from '$lib/apis';
-	import { deleteFileById } from '$lib/apis/files';
+	import { deleteFileById, uploadFile } from '$lib/apis/files';
+	import { compressImage, createMessagesList, extractCurlyBraceWords } from '$lib/utils';
 
-	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
+	import { PASTED_TEXT_CHARACTER_LIMIT, WEBUI_API_BASE_URL } from '$lib/constants';
 
+	import Commands from './MessageInput/Commands.svelte';
+	import FilesOverlay from './MessageInput/FilesOverlay.svelte';
 	import InputMenu from './MessageInput/InputMenu.svelte';
 	import VoiceRecording from './MessageInput/VoiceRecording.svelte';
-	import FilesOverlay from './MessageInput/FilesOverlay.svelte';
-	import Commands from './MessageInput/Commands.svelte';
 
-	import RichTextInput from '../common/RichTextInput.svelte';
-	import Tooltip from '../common/Tooltip.svelte';
 	import FileItem from '../common/FileItem.svelte';
 	import Image from '../common/Image.svelte';
+	import RichTextInput from '../common/RichTextInput.svelte';
+	import Tooltip from '../common/Tooltip.svelte';
 
-	import XMark from '../icons/XMark.svelte';
-	import Headphone from '../icons/Headphone.svelte';
-	import GlobeAlt from '../icons/GlobeAlt.svelte';
-	import PhotoSolid from '../icons/PhotoSolid.svelte';
-	import Photo from '../icons/Photo.svelte';
-	import CommandLine from '../icons/CommandLine.svelte';
 	import { KokoroWorker } from '$lib/workers/KokoroWorker';
-	import ToolServersModal from './ToolServersModal.svelte';
+	import CommandLine from '../icons/CommandLine.svelte';
+	import GlobeAlt from '../icons/GlobeAlt.svelte';
+	import Headphone from '../icons/Headphone.svelte';
+	import Photo from '../icons/Photo.svelte';
 	import Wrench from '../icons/Wrench.svelte';
+	import XMark from '../icons/XMark.svelte';
+	import ToolServersModal from './ToolServersModal.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -408,9 +398,7 @@
 										class="size-3.5 max-w-[28px] object-cover rounded-full"
 										src={$models.find((model) => model.id === atSelectedModel.id)?.info?.meta
 											?.profile_image_url ??
-											($i18n.language === 'dg-DG'
-												? `/doge.png`
-												: `${WEBUI_BASE_URL}/static/favicon.png`)}
+											($i18n.language === 'dg-DG' ? `/doge.png` : `/static/favicon.png`)}
 									/>
 									<div class="translate-y-[0.5px]">
 										Talking to <span class=" font-medium">{atSelectedModel.name}</span>

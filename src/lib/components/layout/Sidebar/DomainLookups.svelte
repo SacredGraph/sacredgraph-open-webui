@@ -9,9 +9,11 @@
 	let isLoading = true;
 
 	const LOOKUPS: Record<string, number> = {
-		'7ma4w1WE': 100, // Basic plan
-		'496E6dQX': 1000, // Professional plan
-		y9qA8q9A: 3000, // Premium plan
+		'7ma4w1WE': 20, // Free
+		'496E6dQX': 200, // Starter
+		y9qA8q9A: 1000, // Growth
+		jW7Rnr9q: 3000, // Pro
+		EWBrYOWr: 10000, // Scale
 		DmwYKy94: 1000 // Add-on
 	};
 

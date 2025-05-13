@@ -1,53 +1,48 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
 	import dayjs from 'dayjs';
+	import { toast } from 'svelte-sonner';
 
-	import { createEventDispatcher } from 'svelte';
-	import { onMount, tick, getContext } from 'svelte';
+	import type { i18n as i18nType } from 'i18next';
+	import { createEventDispatcher, getContext, onMount, tick } from 'svelte';
 	import type { Writable } from 'svelte/store';
-	import type { i18n as i18nType, t } from 'i18next';
 
 	const i18n = getContext<Writable<i18nType>>('i18n');
 
 	const dispatch = createEventDispatcher();
 
-	import { createNewFeedback, getFeedbackById, updateFeedbackById } from '$lib/apis/evaluations';
-	import { getChatById } from '$lib/apis/chats';
 	import { generateTags } from '$lib/apis';
+	import { getChatById } from '$lib/apis/chats';
+	import { createNewFeedback, updateFeedbackById } from '$lib/apis/evaluations';
 
-	import { config, models, settings, temporaryChatEnabled, TTSWorker, user } from '$lib/stores';
 	import { synthesizeOpenAISpeech } from '$lib/apis/audio';
 	import { imageGenerations } from '$lib/apis/images';
+	import { config, models, settings, temporaryChatEnabled, TTSWorker, user } from '$lib/stores';
 	import {
 		copyToClipboard as _copyToClipboard,
-		approximateToHumanReadable,
-		getMessageContentParts,
-		sanitizeResponseContent,
 		createMessagesList,
 		formatDate,
-		removeDetails,
-		removeAllDetails
+		getMessageContentParts,
+		removeAllDetails,
+		sanitizeResponseContent
 	} from '$lib/utils';
-	import { WEBUI_BASE_URL } from '$lib/constants';
 
-	import Name from './Name.svelte';
-	import ProfileImage from './ProfileImage.svelte';
-	import Skeleton from './Skeleton.svelte';
 	import Image from '$lib/components/common/Image.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import RateComment from './RateComment.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
-	import WebSearchResults from './ResponseMessage/WebSearchResults.svelte';
 	import Sparkles from '$lib/components/icons/Sparkles.svelte';
+	import Name from './Name.svelte';
+	import ProfileImage from './ProfileImage.svelte';
+	import RateComment from './RateComment.svelte';
+	import WebSearchResults from './ResponseMessage/WebSearchResults.svelte';
+	import Skeleton from './Skeleton.svelte';
 
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 
-	import Error from './Error.svelte';
+	import FileItem from '$lib/components/common/FileItem.svelte';
+	import { KokoroWorker } from '$lib/workers/KokoroWorker';
 	import Citations from './Citations.svelte';
 	import CodeExecutions from './CodeExecutions.svelte';
 	import ContentRenderer from './ContentRenderer.svelte';
-	import { KokoroWorker } from '$lib/workers/KokoroWorker';
-	import FileItem from '$lib/components/common/FileItem.svelte';
+	import Error from './Error.svelte';
 
 	interface MessageType {
 		id: string;
@@ -590,7 +585,7 @@
 		<div class={`shrink-0 ltr:mr-3 rtl:ml-3`}>
 			<ProfileImage
 				src={model?.info?.meta?.profile_image_url ??
-					($i18n.language === 'dg-DG' ? `/doge.png` : `${WEBUI_BASE_URL}/static/favicon.png`)}
+					($i18n.language === 'dg-DG' ? `/doge.png` : `/static/favicon.png`)}
 				className={'size-8'}
 			/>
 		</div>
