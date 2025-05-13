@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-echo "SCRIPT_DIR: $SCRIPT_DIR"
-
 cd "$SCRIPT_DIR" || exit
 
 # Add conditional Playwright browser installation
@@ -18,9 +16,8 @@ fi
 
 KEY_FILE=.webui_secret_key
 
-PROXY_PORT="8081" # "${PORT:-8080}"
-PORT="8080" # "${PORT:-8080}"
-HOST="0.0.0.0" # "${HOST:-0.0.0.0}"
+PORT="${PORT:-8080}"
+HOST="${HOST:-0.0.0.0}"
 
 if test "$WEBUI_SECRET_KEY $WEBUI_JWT_SECRET_KEY" = " "; then
   echo "Loading WEBUI_SECRET_KEY from file, not provided as an environment variable."
@@ -69,24 +66,7 @@ if [ -n "$SPACE_ID" ]; then
   export WEBUI_URL=${SPACE_HOST}
 fi
 
-cleanup() {
-    echo "Caught SIGINT. Cleaning up..."
-    kill $server_pid1 $server_pid2  # Terminates both server processes
-    exit
-}
-
-trap cleanup SIGINT
-
 PYTHON_CMD=$(command -v python3 || command -v python)
 
-echo "Starting webui on port $PORT..."
-WEBUI_SECRET_KEY="$WEBUI_SECRET_KEY" exec "$PYTHON_CMD" -m uvicorn open_webui.main:app --host "$HOST" --port "$PORT" --forwarded-allow-ips '*' --workers "${UVICORN_WORKERS:-1}" &
-server_pid1=$!
+WEBUI_SECRET_KEY="$WEBUI_SECRET_KEY" exec "$PYTHON_CMD" -m uvicorn open_webui.main:app --host "$HOST" --port "$PORT" --forwarded-allow-ips '*' --workers "${UVICORN_WORKERS:-1}"
 
-echo "Starting proxy on port $PROXY_PORT..."
-exec "$PYTHON_CMD" -m uvicorn proxy.main:app --host "$HOST" --port "$PROXY_PORT" --forwarded-allow-ips '*' --workers "${UVICORN_WORKERS:-1}" &
-server_pid2=$!  # Get the process ID of the last backgrounded command
-
-wait -n
-
-exit $?

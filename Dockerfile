@@ -168,27 +168,27 @@ RUN chown -R $UID:$GID /app/backend/data/
 # COPY --chown=$UID:$GID --from=proxy /proxy/package-lock.json /proxy/package-lock.json
 # COPY --chown=$UID:$GID --from=proxy /proxy/index.js /proxy/index.js
 
-COPY --chown=$UID:$GID /CHANGELOG.md /app/CHANGELOG.md
+COPY --chown=$UID:$GID /CHANGELOG.nextdomain.md /app/CHANGELOG.md
 # COPY --chown=$UID:$GID --from=proxy /proxy ./proxy
 
 # copy backend files
 COPY --chown=$UID:$GID ./backend .
 
-WORKDIR /app/backend/proxy
+# WORKDIR /app/backend/proxy
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+# # Install system dependencies
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     gcc \
+#     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first to leverage Docker cache
-COPY proxy/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# # Copy requirements first to leverage Docker cache
+# COPY proxy/requirements.txt .
+# RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the proxy code
-COPY proxy/ .
+# # Copy the rest of the proxy code
+# COPY proxy/ .
 
-WORKDIR /app/backend
+# WORKDIR /app/backend
 
 EXPOSE 8081
 

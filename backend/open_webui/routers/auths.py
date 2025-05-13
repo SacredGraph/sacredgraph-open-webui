@@ -354,23 +354,21 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
 @router.post("/signin", response_model=SessionUserResponse)
 async def signin(request: Request, response: Response, form_data: SigninForm):
     if WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
-        if WEBUI_AUTH_TRUSTED_EMAIL_HEADER not in request.headers:
-            # raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_TRUSTED_HEADER)
-            return
+        # if WEBUI_AUTH_TRUSTED_EMAIL_HEADER not in request.headers:
+        #     raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_TRUSTED_HEADER)
 
-        trusted_email = request.headers[WEBUI_AUTH_TRUSTED_EMAIL_HEADER].lower()
+        trusted_email = request.headers.get(WEBUI_AUTH_TRUSTED_EMAIL_HEADER).lower()
+
+        if not trusted_email:
+            raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_TRUSTED_HEADER)
+
         trusted_name = trusted_email
         if WEBUI_AUTH_TRUSTED_NAME_HEADER:
             trusted_name = request.headers.get(
                 WEBUI_AUTH_TRUSTED_NAME_HEADER, trusted_email
             )
+
         outseta_id = request.headers.get(WEBUI_AUTH_TRUSTED_OUTSETA_ID_HEADER, None)
-        print(f"trusted_email: {trusted_email}")
-        print(f"trusted_name: {trusted_name}")
-        print(f"outseta_id: {outseta_id}")
-        print(
-            f"Users.get_user_by_email(trusted_email.lower()): {Users.get_user_by_email(trusted_email.lower())}"
-        )
         if not Users.get_user_by_email(trusted_email.lower()):
             await signup(
                 request,

@@ -874,6 +874,38 @@ app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH = (
 app.state.MODELS = {}
 
 
+# Add the JWT verification function
+OUTSETA_DOMAIN = os.getenv("OUTSETA_DOMAIN", "nextdomain.outseta.com")
+JWKS_URL = f"https://{OUTSETA_DOMAIN}/.well-known/jwks"
+
+
+@cached(ttl=3600)  # Cache JWKS for 1 hour
+async def get_jwks():
+    """Get JWKS from Outseta."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(JWKS_URL) as response:
+            response.raise_for_status()
+            return await response.json()
+
+
+async def verify_jwt(token: str) -> Optional[dict]:
+    """Verify JWT token and return payload if valid."""
+    try:
+        # Get JWKS from cache or fetch if needed
+        jwks = await get_jwks()
+
+        # Verify token
+        from jose import jwt
+
+        payload = jwt.decode(
+            token, jwks, algorithms=["RS256"], options={"verify_aud": False}
+        )
+        return payload
+    except Exception as e:
+        log.error(f"JWT verification failed: {e}")
+        return None
+
+
 class RedirectMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Check if the request is a GET request
@@ -892,6 +924,68 @@ class RedirectMiddleware(BaseHTTPMiddleware):
         # Proceed with the normal flow of other requests
         response = await call_next(request)
         return response
+
+
+class AdditionalHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Check for access token in query params first
+        access_token = request.query_params.get("access_token")
+        print(f"[AdditionalHeadersMiddleware] access_token: {access_token}")
+        if access_token:
+            response = RedirectResponse(url=os.getenv("PROXY_FRONTEND_URL"))
+            print(f"[AdditionalHeadersMiddleware] request.url.path: {request.url.path}")
+            response.set_cookie(
+                key="Outseta.nocode.accessToken",
+                value=access_token,
+                httponly=True,
+                secure=True,
+                samesite="lax",
+            )
+            return response
+
+        # Get the token from the request
+        token = request.cookies.get("Outseta.nocode.accessToken")
+
+        print(f"[AdditionalHeadersMiddleware] token: {token}")
+
+        if token:
+            # Verify and decode the token
+            payload = await verify_jwt(token)
+
+            print(f"[AdditionalHeadersMiddleware] payload: {payload}")
+
+            if payload is not None and "email" in payload:
+                # Add additional headers
+                request.headers.__dict__["_list"].append(
+                    (
+                        b"x-user-id",
+                        payload.get("outseta:accountUid", "").encode(),
+                    )
+                )
+
+                request.headers.__dict__["_list"].append(
+                    (
+                        b"x-user-email",
+                        payload.get("email", "").encode(),
+                    )
+                )
+
+                request.headers.__dict__["_list"].append(
+                    (
+                        b"x-user-name",
+                        (
+                            payload.get("email", "")
+                            if payload.get("name", "")
+                            else payload.get("name", "")
+                        )
+                        .strip()
+                        .encode(),
+                    )
+                )
+
+            print(f"[AdditionalHeadersMiddleware] request.headers: {request.headers}")
+
+        return await call_next(request)
 
 
 # Add the middleware to the app
@@ -946,6 +1040,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(AdditionalHeadersMiddleware)
 
 
 app.mount("/ws", socket_app)

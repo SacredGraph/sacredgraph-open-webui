@@ -657,7 +657,8 @@
 		var o_options = {
 			domain: 'nextdomain.outseta.com',
 			load: 'auth,customForm,emailList,leadCapture,nocode,profile,support',
-			tokenStorage: 'cookie'
+			tokenStorage: 'cookie',
+			auth: { authenticationCallbackUrl: 'http://localhost:8081/' }
 		};
 	</script>
 
