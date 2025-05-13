@@ -1,11 +1,20 @@
+import asyncio
 import logging
 import os
 import time
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, Dict, Optional, Tuple
 
+import websockets
 from dotenv import load_dotenv
-from fastapi import Cookie, FastAPI, HTTPException, Response
+from fastapi import (
+    Cookie,
+    FastAPI,
+    HTTPException,
+    Response,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi_proxy_lib.core.http import ReverseHttpProxy
@@ -154,3 +163,46 @@ async def proxy_request(
 
     # Use fastapi-proxy-lib to forward the request
     return await proxy.proxy(request=request, path=path)
+
+
+@app.websocket("/{path:path}")
+async def websocket_proxy(websocket: WebSocket, path: str):
+    """WebSocket proxy endpoint that handles authentication and request forwarding."""
+    try:
+        # Accept the WebSocket connection
+        await websocket.accept()
+
+        # Get the target WebSocket URL
+        target_ws_url = f"{TARGET_URL.replace('http', 'ws')}{path}"
+
+        # Connect to the target WebSocket
+        async with websockets.connect(target_ws_url) as target_ws:
+            # Create tasks for bidirectional communication
+            async def forward_to_target():
+                try:
+                    while True:
+                        data = await websocket.receive_text()
+                        await target_ws.send(data)
+                except WebSocketDisconnect:
+                    logger.info("[PROXY] Client disconnected")
+                except Exception as e:
+                    logger.error(f"[PROXY] Error forwarding to target: {e}")
+
+            async def forward_to_client():
+                try:
+                    while True:
+                        data = await target_ws.recv()
+                        await websocket.send_text(data)
+                except WebSocketDisconnect:
+                    logger.info("[PROXY] Target disconnected")
+                except Exception as e:
+                    logger.error(f"[PROXY] Error forwarding to client: {e}")
+
+            # Run both tasks concurrently
+            await asyncio.gather(forward_to_target(), forward_to_client())
+    except Exception as e:
+        logger.error(f"[PROXY] WebSocket proxy error: {e}")
+        try:
+            await websocket.close()
+        except:
+            pass
