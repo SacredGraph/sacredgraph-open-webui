@@ -369,6 +369,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             )
 
         outseta_id = request.headers.get(WEBUI_AUTH_TRUSTED_OUTSETA_ID_HEADER, None)
+        print(f"trusted_email: {trusted_email}")
         if not Users.get_user_by_email(trusted_email.lower()):
             await signup(
                 request,
