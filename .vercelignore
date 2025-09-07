@@ -1,0 +1,14 @@
+backend
+cypress
+proxy
+docs
+kubernetes
+test
+docker-*
+cypress*
+Dockerfile
+*.py
+*.toml
+*.md
+*.sh
+uv.lock

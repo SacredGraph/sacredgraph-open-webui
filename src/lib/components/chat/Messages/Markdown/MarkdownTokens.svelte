@@ -1,27 +1,29 @@
 <script lang="ts">
-	import DOMPurify from 'dompurify';
-	import { onMount, getContext } from 'svelte';
+	import { createEventDispatcher, getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
 
-	import { marked, type Token } from 'marked';
 	import { unescapeHtml } from '$lib/utils';
+	import { marked, type Token } from 'marked';
 
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import CodeBlock from '$lib/components/chat/Messages/CodeBlock.svelte';
 	import MarkdownInlineTokens from '$lib/components/chat/Messages/Markdown/MarkdownInlineTokens.svelte';
-	import KatexRenderer from './KatexRenderer.svelte';
-	import AlertRenderer, { alertComponent } from './AlertRenderer.svelte';
 	import Collapsible from '$lib/components/common/Collapsible.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import ArrowDownTray from '$lib/components/icons/ArrowDownTray.svelte';
+	import DomainAvailability from '$lib/components/tools/DomainAvailability.svelte';
+	import AlertRenderer, { alertComponent } from './AlertRenderer.svelte';
+	import KatexRenderer from './KatexRenderer.svelte';
 
-	import Source from './Source.svelte';
 	import { settings } from '$lib/stores';
+
 	import HtmlToken from './HTMLToken.svelte';
+
+	const dispatch = createEventDispatcher();
 
 	export let id: string;
 	export let tokens: Token[];
@@ -249,23 +251,31 @@
 			</ul>
 		{/if}
 	{:else if token.type === 'details'}
-		<Collapsible
-			title={token.summary}
-			open={$settings?.expandDetails ?? false}
-			attributes={token?.attributes}
-			className="w-full space-y-1"
-			dir="auto"
-		>
-			<div class=" mb-1.5" slot="content">
-				<svelte:self
-					id={`${id}-${tokenIdx}-d`}
-					tokens={marked.lexer(token.text)}
-					attributes={token?.attributes}
-					{onTaskClick}
-					{onSourceClick}
-				/>
-			</div>
-		</Collapsible>
+		{#if token.attributes?.name === 'check_domain_availability'}
+			<DomainAvailability
+				title={token.summary}
+				attributes={token?.attributes}
+				className="space-y-2"
+			/>
+		{:else}
+			<Collapsible
+				title={token.summary}
+				open={$settings?.expandDetails ?? false}
+				attributes={token?.attributes}
+				className="w-full space-y-1"
+				dir="auto"
+			>
+				<div class=" mb-1.5" slot="content">
+					<svelte:self
+						id={`${id}-${tokenIdx}-d`}
+						tokens={marked.lexer(token.text)}
+						attributes={token?.attributes}
+						{onTaskClick}
+						{onSourceClick}
+					/>
+				</div>
+			</Collapsible>
+		{/if}
 	{:else if token.type === 'html'}
 		<HtmlToken {id} {token} {onSourceClick} />
 	{:else if token.type === 'iframe'}

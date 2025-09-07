@@ -1,38 +1,36 @@
 <script lang="ts">
 	import dayjs from 'dayjs';
-	import relativeTime from 'dayjs/plugin/relativeTime';
 	import isToday from 'dayjs/plugin/isToday';
 	import isYesterday from 'dayjs/plugin/isYesterday';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
+	import relativeTime from 'dayjs/plugin/relativeTime';
 
 	dayjs.extend(relativeTime);
 	dayjs.extend(isToday);
 	dayjs.extend(isYesterday);
 	dayjs.extend(localizedFormat);
 
-	import { getContext, onMount } from 'svelte';
+	import { getContext } from 'svelte';
 	const i18n = getContext<Writable<i18nType>>('i18n');
 
-	import { settings, user, shortCodesToEmojis } from '$lib/stores';
-
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	import { settings, shortCodesToEmojis, user } from '$lib/stores';
 
 	import Markdown from '$lib/components/chat/Messages/Markdown.svelte';
-	import ProfileImage from '$lib/components/chat/Messages/ProfileImage.svelte';
 	import Name from '$lib/components/chat/Messages/Name.svelte';
+	import ProfileImage from '$lib/components/chat/Messages/ProfileImage.svelte';
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
+	import FileItem from '$lib/components/common/FileItem.svelte';
+	import Image from '$lib/components/common/Image.svelte';
+	import Textarea from '$lib/components/common/Textarea.svelte';
+	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import ChatBubbleOvalEllipsis from '$lib/components/icons/ChatBubbleOvalEllipsis.svelte';
+	import ChevronRight from '$lib/components/icons/ChevronRight.svelte';
+	import FaceSmile from '$lib/components/icons/FaceSmile.svelte';
 	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
 	import Pencil from '$lib/components/icons/Pencil.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Textarea from '$lib/components/common/Textarea.svelte';
-	import Image from '$lib/components/common/Image.svelte';
-	import FileItem from '$lib/components/common/FileItem.svelte';
-	import ProfilePreview from './Message/ProfilePreview.svelte';
-	import ChatBubbleOvalEllipsis from '$lib/components/icons/ChatBubbleOvalEllipsis.svelte';
-	import FaceSmile from '$lib/components/icons/FaceSmile.svelte';
-	import ReactionPicker from './Message/ReactionPicker.svelte';
-	import ChevronRight from '$lib/components/icons/ChevronRight.svelte';
 	import { formatDate } from '$lib/utils';
+	import ProfilePreview from './Message/ProfilePreview.svelte';
+	import ReactionPicker from './Message/ReactionPicker.svelte';
 
 	export let message;
 	export let showUserProfile = true;
@@ -144,7 +142,7 @@
 					<ProfilePreview user={message.user}>
 						<ProfileImage
 							src={message.user?.profile_image_url ??
-								($i18n.language === 'dg-DG' ? `/doge.png` : `${WEBUI_BASE_URL}/static/favicon.png`)}
+								($i18n.language === 'dg-DG' ? `/doge.png` : `/static/favicon.png`)}
 							className={'size-8 translate-y-1 ml-0.5'}
 						/>
 					</ProfilePreview>

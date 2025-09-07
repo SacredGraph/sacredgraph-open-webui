@@ -2,16 +2,10 @@ import time
 from typing import Optional
 
 from open_webui.internal.db import Base, JSONField, get_db
-
-
 from open_webui.models.chats import Chats
 from open_webui.models.groups import Groups
-
-
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import BigInteger, Column, String, Text
-from sqlalchemy import or_
-
+from sqlalchemy import BigInteger, Column, String, Text, or_
 
 ####################
 # User DB Schema
@@ -26,7 +20,7 @@ class User(Base):
     email = Column(String)
     role = Column(String)
     profile_image_url = Column(Text)
-
+    outseta_id = Column(Text, unique=True)
     last_active_at = Column(BigInteger)
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
@@ -49,6 +43,7 @@ class UserModel(BaseModel):
     name: str
     email: str
     role: str = "pending"
+    outseta_id: Optional[str] = None
     profile_image_url: str
 
     last_active_at: int  # timestamp in epoch
@@ -79,6 +74,7 @@ class UserResponse(BaseModel):
     name: str
     email: str
     role: str
+    outseta_id: Optional[str] = None
     profile_image_url: str
 
 
@@ -86,6 +82,7 @@ class UserNameResponse(BaseModel):
     id: str
     name: str
     role: str
+    outseta_id: Optional[str] = None
     profile_image_url: str
 
 
@@ -110,6 +107,7 @@ class UsersTable:
         profile_image_url: str = "/user.png",
         role: str = "pending",
         oauth_sub: Optional[str] = None,
+        outseta_id: Optional[str] = None,
     ) -> Optional[UserModel]:
         with get_db() as db:
             user = UserModel(
@@ -123,6 +121,7 @@ class UsersTable:
                     "created_at": int(time.time()),
                     "updated_at": int(time.time()),
                     "oauth_sub": oauth_sub,
+                    "outseta_id": outseta_id,
                 }
             )
             result = User(**user.model_dump())

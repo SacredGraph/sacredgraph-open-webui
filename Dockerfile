@@ -20,21 +20,24 @@ ARG BUILD_HASH=dev-build
 ARG UID=0
 ARG GID=0
 
-######## WebUI frontend ########
-FROM --platform=$BUILDPLATFORM node:22-alpine3.20 AS build
-ARG BUILD_HASH
+# ######## WebUI frontend ########
+# FROM node:22-alpine3.20 AS build
+# ARG BUILD_HASH
 
-WORKDIR /app
+# ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-COPY package.json package-lock.json ./
-RUN npm ci
+# WORKDIR /app
 
-COPY . .
-ENV APP_BUILD_HASH=${BUILD_HASH}
-RUN npm run build
+# COPY package.json package-lock.json ./
+# RUN npm ci
 
-######## WebUI backend ########
-FROM python:3.11-slim-bookworm AS base
+# COPY . .
+# ENV APP_BUILD_HASH=${BUILD_HASH}
+# RUN npm run build
+
+
+######## Proxy server ########
+FROM python:3.11-slim
 
 # Use args
 ARG USE_CUDA
@@ -47,7 +50,7 @@ ARG GID
 
 ## Basis ##
 ENV ENV=prod \
-    PORT=8080 \
+    PORT=8081 \
     # pass build args to the build
     USE_OLLAMA_DOCKER=${USE_OLLAMA} \
     USE_CUDA_DOCKER=${USE_CUDA} \
@@ -132,38 +135,62 @@ RUN if [ "$USE_OLLAMA" = "true" ]; then \
 # install python dependencies
 COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
 
-RUN pip3 install --no-cache-dir uv && \
-    if [ "$USE_CUDA" = "true" ]; then \
+RUN pip3 install --no-cache-dir uv
+
+RUN if [ "$USE_CUDA" = "true" ]; then \
     # If you use CUDA the whisper and embedding model will be downloaded on first use
-    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
-    uv pip install --system -r requirements.txt --no-cache-dir && \
+    pip3 install torch torchvision torchaudio --pre --index-url https://download.pytorch.org/whl/$USE_CUDA_DOCKER_VER --no-cache-dir && \
+    uv pip install --system -r requirements.txt --pre --no-cache-dir && \
     python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
     python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
     python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
     else \
-    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu --no-cache-dir && \
-    uv pip install --system -r requirements.txt --no-cache-dir && \
+    pip3 install torch torchvision torchaudio --pre --index-url https://download.pytorch.org/whl/cpu --no-cache-dir && \
+    uv pip install --system -r requirements.txt --pre --no-cache-dir && \
     python -c "import os; from sentence_transformers import SentenceTransformer; SentenceTransformer(os.environ['RAG_EMBEDDING_MODEL'], device='cpu')" && \
     python -c "import os; from faster_whisper import WhisperModel; WhisperModel(os.environ['WHISPER_MODEL'], device='cpu', compute_type='int8', download_root=os.environ['WHISPER_MODEL_DIR'])"; \
     python -c "import os; import tiktoken; tiktoken.get_encoding(os.environ['TIKTOKEN_ENCODING_NAME'])"; \
-    fi; \
-    chown -R $UID:$GID /app/backend/data/
+    fi;
 
-
+RUN chown -R $UID:$GID /app/backend/data/
 
 # copy embedding weight from build
 # RUN mkdir -p /root/.cache/chroma/onnx_models/all-MiniLM-L6-v2
 # COPY --from=build /app/onnx /root/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx
 
-# copy built frontend files
-COPY --chown=$UID:$GID --from=build /app/build /app/build
-COPY --chown=$UID:$GID --from=build /app/CHANGELOG.md /app/CHANGELOG.md
-COPY --chown=$UID:$GID --from=build /app/package.json /app/package.json
+# # copy built frontend files
+# COPY --chown=$UID:$GID --from=build /app/build /app/build
+# COPY --chown=$UID:$GID --from=build /app/CHANGELOG.md /app/CHANGELOG.md
+# COPY --chown=$UID:$GID --from=build /app/package.json /app/package.json
+
+# COPY --chown=$UID:$GID --from=proxy /proxy/node_modules /proxy/node_modules
+# COPY --chown=$UID:$GID --from=proxy /proxy/package.json /proxy/package.json
+# COPY --chown=$UID:$GID --from=proxy /proxy/package-lock.json /proxy/package-lock.json
+# COPY --chown=$UID:$GID --from=proxy /proxy/index.js /proxy/index.js
+
+COPY --chown=$UID:$GID /CHANGELOG.nextdomain.md /app/CHANGELOG.md
+# COPY --chown=$UID:$GID --from=proxy /proxy ./proxy
 
 # copy backend files
 COPY --chown=$UID:$GID ./backend .
 
-EXPOSE 8080
+# WORKDIR /app/backend/proxy
+
+# # Install system dependencies
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     gcc \
+#     && rm -rf /var/lib/apt/lists/*
+
+# # Copy requirements first to leverage Docker cache
+# COPY proxy/requirements.txt .
+# RUN pip install --no-cache-dir -r requirements.txt
+
+# # Copy the rest of the proxy code
+# COPY proxy/ .
+
+# WORKDIR /app/backend
+
+EXPOSE 8081
 
 HEALTHCHECK CMD curl --silent --fail http://localhost:${PORT:-8080}/health | jq -ne 'input.status == true' || exit 1
 
@@ -172,5 +199,9 @@ USER $UID:$GID
 ARG BUILD_HASH
 ENV WEBUI_BUILD_VERSION=${BUILD_HASH}
 ENV DOCKER=true
+ENV PROXY_PORT=8081
+ENV PROXY_FRONTEND_URL="https://app.nextdomain.ai"
+ENV PROXY_TARGET="http://localhost:8080"
+ENV OUTSETA_DOMAIN="nextdomain.outseta.com"
 
-CMD [ "bash", "start.sh"]
+CMD [ "bash", "start.sh" ]
